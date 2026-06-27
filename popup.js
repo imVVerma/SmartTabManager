@@ -16,8 +16,22 @@ async function groupTabsByDomain() {
   countEl.textContent = 'Grouping tabs...';
 
   try {
+    // Ping to wake up the service worker to avoid race conditions
+    try {
+      await chrome.runtime.sendMessage({ action: 'ping' });
+    } catch (e) {
+      console.log('Ping failed (expected if SW was inactive), trying again:', e);
+      // Wait a moment for the service worker to fully wake up
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
     const result = await chrome.runtime.sendMessage({ action: 'groupTabs' });
     console.log('response from background:', result);
+    
+    if (result && result.error) {
+      throw new Error(result.error);
+    }
+    
     if (!result || result.count === 0) {
       countEl.textContent = 'No domains have 2+ tabs to group.';
     } else {

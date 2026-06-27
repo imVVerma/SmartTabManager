@@ -6,7 +6,12 @@ chrome.runtime.onInstalled.addListener(() => {
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'groupTabs') {
-    handleGroupTabs().then(result => sendResponse(result));
+    handleGroupTabs()
+      .then(result => sendResponse(result))
+      .catch(err => {
+        console.error('Error grouping tabs:', err);
+        sendResponse({ error: err.message || 'Unknown error' });
+      });
     return true; // keeps the message channel open for async response
   }
 });
